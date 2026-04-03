@@ -36,6 +36,7 @@ Convierte proyectos de Scratch 3 (.sb3) en juegos ejecutables independientes usa
 - Soporta la mayoría de los bloques de Scratch 3, incluyendo sonidos, clones, listas y procedimientos.
 - Los gráficos vectoriales SVG y los textos se rasterizan automáticamente.
 - Si encuentras un bug, abre un issue en GitHub.
+- solo soporta bloques nativos, proyectos con extenciones fallaran
 
 ## Créditos
 - Basado en SFML, nanosvg, stb_truetype.
