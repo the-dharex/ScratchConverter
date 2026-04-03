@@ -1,0 +1,75 @@
+cmake_minimum_required(VERSION 3.20)
+project(@PROJECT_NAME@ LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ── Find SFML ─────────────────────────────────────────────────
+find_package(SFML 2.5 COMPONENTS graphics window system audio QUIET)
+
+if(NOT SFML_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        sfml
+        GIT_REPOSITORY https://github.com/SFML/SFML.git
+        GIT_TAG        2.6.1
+        GIT_SHALLOW    TRUE
+    )
+    FetchContent_MakeAvailable(sfml)
+endif()
+
+# ── Sources ───────────────────────────────────────────────────
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.hpp")
+
+add_executable(@PROJECT_NAME@ ${SOURCES})
+
+target_include_directories(@PROJECT_NAME@ PRIVATE src)
+
+target_link_libraries(@PROJECT_NAME@ PRIVATE
+    sfml-graphics
+    sfml-window
+    sfml-system
+    sfml-audio
+)
+
+# ── Copy assets next to executable ────────────────────────────
+add_custom_command(TARGET @PROJECT_NAME@ POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:@PROJECT_NAME@>/assets"
+    COMMENT "Copying game assets..."
+)
+
+# ── Platform-specific ─────────────────────────────────────────
+if(WIN32)
+    # Copy SFML DLLs on Windows
+    if(TARGET sfml-graphics)
+        add_custom_command(TARGET @PROJECT_NAME@ POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_FILE:sfml-graphics>
+                $<TARGET_FILE:sfml-window>
+                $<TARGET_FILE:sfml-system>
+                $<TARGET_FILE:sfml-audio>
+                $<TARGET_FILE_DIR:@PROJECT_NAME@>
+            COMMENT "Copying SFML DLLs..."
+        )
+    endif()
+
+    # Copy OpenAL32.dll (required by sfml-audio)
+    # SFML 2.6.x bundles it in extlibs/bin/
+    if(DEFINED sfml_SOURCE_DIR)
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(_OPENAL_DLL "${sfml_SOURCE_DIR}/extlibs/bin/x64/openal32.dll")
+        else()
+            set(_OPENAL_DLL "${sfml_SOURCE_DIR}/extlibs/bin/x86/openal32.dll")
+        endif()
+        if(EXISTS "${_OPENAL_DLL}")
+            add_custom_command(TARGET @PROJECT_NAME@ POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${_OPENAL_DLL}"
+                    "$<TARGET_FILE_DIR:@PROJECT_NAME@>"
+                COMMENT "Copying OpenAL32.dll..."
+            )
+        endif()
+    endif()
+endif()
