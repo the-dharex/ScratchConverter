@@ -5,6 +5,7 @@ Convierte proyectos de Scratch 3 (.sb3) en juegos ejecutables independientes usa
 ## Requisitos
 - Windows 10/11 (o Linux, experimental)
 - CMake 3.20+
+- Git
 - Visual Studio 2026 (o g++/clang en Linux)
 - SFML 2.6.1 (se descarga automáticamente)
 
